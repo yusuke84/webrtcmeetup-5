@@ -4,20 +4,23 @@
 
 $(document).ready(function () {
 
+    // 定数宣言
     const APIKEY = '0e95b7fa-7431-11e4-93f6-3d047b5b6c93';
     const TURNSERVERHOST = '153.149.12.59';
     const TURNUSERNAME = 'skyuser';
     const TURNPASS = 'skypass';
 
-    var userList = new Array();
-
+    // グローバル変数
+    var userList = [];
     var myPeerid = '';
-
     var myStream = null;
+    var peer = null;
 
+    // getUserMediaのcompatibility
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
-    var peer = new Peer({key: APIKEY,
+    // Peerオブジェクトを生成
+    peer = new Peer({key: APIKEY,
         config: { 'iceServers': [
             { 'url': 'stun:stun.skyway.io:3478' },
             { 'url': 'turn:'+TURNSERVERHOST+':3478?transport=udp','username':TURNUSERNAME,'credential':TURNPASS },
@@ -25,38 +28,40 @@ $(document).ready(function () {
         ] },
         debug: 3});
 
+    // openイベントのハンドラ
     peer.on('open', function(id) {
+
         myPeerid = id;
         console.log('My peer ID is: ' + id);
 
+        // getUserMediaで自身のカメラ映像、音声を取得する
         _getUserMedia(function(stream){
             $('#myStream').prop('src', URL.createObjectURL(stream));
             $('#myStream').css('width','100%');
-
             myStream = stream;
+
+            // カメラ映像、音声が取得できたらcallイベント用のハンドラを設置
             peer.on('call', function(call) {
 
+                // 相手からcallイベントがきたらstreamを送り返す（応答する）
                 call.answer(stream);
 
-                call.on('stream', function(stream){
-                    _addVideoDom(call,stream);
-                });
+                // callオブジェクトのイベントをセット
+                _callEvents(call);
 
+                // 接続先毎のcallオブジェクトをマルチパーティ管理用に保存
                 _addUserList(call);
 
-                call.on('close', function(){
-                    _removeUserList(call);
-                    _removeVideoDom(call);
-
-                });
             });
 
-            setInterval(_getUserlist, 1000);
+            // 全ユーザと接続を行う
+            _createConnections();
 
         });
 
     });
 
+    // エラーハンドラ
     peer.on('error', function(err){
         console.log(err);
     });
@@ -84,49 +89,50 @@ $(document).ready(function () {
         });
     }
 
-    function _getUserlist() {
-        //ユーザリストを取得
+    // ユーザリストを取得して片っ端から繋ぐ
+    function _createConnections() {
         peer.listAllPeers(function(list){
             for(var cnt = 0;cnt < list.length;cnt++){
-                var grepAns = $.grep(userList,function(n){
-                    //検索条件を設定
-                    return (n.peer == list[cnt]);
-                });
-                if(grepAns.length == 0 && myPeerid != list[cnt]){
+                if(myPeerid != list[cnt]){
                     var _call = peer.call(list[cnt],myStream);
-                    _callEvent(_call);
+                    _callEvents(_call);
                     _addUserList(_call);
                 }
             }
         });
     }
 
-    function _callEvent(call){
+    // callオブジェクトのイベントをセットする
+    function _callEvents(call){
+        // 相手からstreamイベンがきたらそのstreamをVIDEO要素に表示する
         call.on('stream', function(stream){
             _addVideoDom(call,stream);
         });
 
+        // 相手からcloseイベントがきたらコネクションを切断して保存したcallオブジェクトを削除、対応するVIDEOS要素も削除
         call.on('close', function(){
+            call.close();
             _removeUserList(call);
+            _removeVideoDom(call);
         });
 
     }
 
+    // ユーザリストの保存
     function _addUserList(call){
         userList.push(call);
 
     }
 
+    // ユーザリストの削除
     function _removeUserList(call){
         var _position = userList.indexOf(call);
         if(_position > 0){
             userList.splice(_position,1)
         }
-        call.close();
-        _removeVideoDom(call);
-
     }
 
+    // VIDEO要素を追加する
     function _addVideoDom(call,stream){
         var _videoDom = $('<video>');
         _videoDom.attr('id',call.peer);
@@ -139,12 +145,14 @@ $(document).ready(function () {
 
     }
 
+    // VIDEO要素を削除する
     function _removeVideoDom(call){
         $('#'+call.peer).remove();
         _resizeDom();
 
     }
 
+    // VIDEO要素のサイズを調整する
     function _resizeDom(){
         var _baseW = 100;
         var _baseH = 100;
@@ -152,7 +160,6 @@ $(document).ready(function () {
         var _height = 100;
 
         var _nodes = $('.videosContainer').children();
-
         var _width = _baseW / _nodes.length;
         var _height = _baseH / _nodes.length;
 

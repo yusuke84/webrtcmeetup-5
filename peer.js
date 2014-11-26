@@ -2171,6 +2171,8 @@ Negotiator._idPrefix = 'pc_';
 
 /** Returns a PeerConnection object set up correctly (for data, media). */
 Negotiator.startConnection = function(connection, options) {
+
+  console.log('%c' + JSON.stringify(connection.provider.options.config, null, '\t'), 'color:red');
   var pc = Negotiator._getPeerConnection(connection, options);
 
   if (connection.type === 'media' && options._stream) {

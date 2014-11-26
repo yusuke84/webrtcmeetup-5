@@ -5,7 +5,7 @@
 $(document).ready(function () {
 
     const APIKEY = '0e95b7fa-7431-11e4-93f6-3d047b5b6c93';
-    const TURNSERVERHOST = '153.149.12.59:3478';
+    const TURNSERVERHOST = '153.149.12.59';
     const TURNUSERNAME = 'skyuser';
     const TURNPASS = 'skypass';
 
@@ -19,8 +19,9 @@ $(document).ready(function () {
 
     var peer = new Peer({key: APIKEY,
         config: { 'iceServers': [
-            { 'url':'stun:stun.skyway.io:3478' },
-            { 'url':'turn:'+TURNSERVERHOST,'username':TURNUSERNAME,'credential':TURNPASS }
+            { 'url': 'stun:stun.skyway.io:3478' },
+            { 'url': 'turn:'+TURNSERVERHOST+':3478?transport=udp','username':TURNUSERNAME,'credential':TURNPASS },
+            { 'url': 'turn:'+TURNSERVERHOST+':3478?transport=tcp','username':TURNUSERNAME,'credential':TURNPASS }
         ] },
         debug: 3});
 

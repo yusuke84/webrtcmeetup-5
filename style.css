@@ -6,35 +6,15 @@ html {
   background-size: cover;
 }
 
-.remoteVideosContainer {
+.videosContainer {
+    position: absolute;
     width: 100%;
     height: 100%;
-    position: absolute;
     left: 0;
     top: 0;
-    z-index: 1;
 }
 
-#remoteVideo {
-    width: 300px;
-    height: 300px;
-}
-
-.myVideContainer {
-    width: 200px;
-    height: 200px;
-    position: absolute;
-    bottom: 100px;
-    right: 20px;
-    border-radius: 100px;
-    z-index: 2;
-    overflow: hidden;
-}
-
-#myVideo {
-    position: absolute;
-    width: 300px;
-    height: 300px;
-    top: -50px;
-    left: -50px;
+.video {
+    background: black;
+    float: left;
 }

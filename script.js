@@ -19,6 +19,7 @@ $(document).ready(function () {
 
     var peer = new Peer({key: APIKEY,
         config: { 'iceServers': [
+            { 'url':'stun:stun.skyway.io:3478' },
             { 'url':'turn:'+TURNSERVERHOST,'username':TURNUSERNAME,'credential':TURNPASS }
         ] },
         debug: 3});
